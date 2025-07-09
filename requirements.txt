@@ -1,0 +1,40 @@
+# Core dependencies
+fastapi>=0.110.0
+uvicorn>=0.27.1
+python-multipart>=0.0.9
+
+# Computer Vision
+opencv-python>=4.11.0.86
+numpy>=1.24.0
+
+# Deep Learning
+ultralytics>=8.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Object Tracking
+deep-sort-realtime>=1.3.2
+
+# NLP and Embeddings
+sentence-transformers>=2.2.2
+spacy>=3.7.2
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz#egg=en_core_web_sm
+
+# Vector Search
+faiss-cpu>=1.7.4
+
+# HTTP Client
+httpx>=0.28.1
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.66.1
+
+# sentence-transformers
+sentence-transformers
+
+# faiss-cpu
+faiss-cpu
+
+# groq
+groq
