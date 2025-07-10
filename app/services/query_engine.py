@@ -1,6 +1,23 @@
 import httpx
 import logging
-import asyncio
+from app.utils.embeddings import embedder, embedding_index, embedding_metadata
+
+
+async def semantic_search(prompt: str):
+    query_embedding = embedder.encode(prompt)
+    scores, indices = embedding_index.search(query_embedding[None, :], k=1)
+
+    if scores[0][0] > 0.5:  # similarity threshold
+        metadata = embedding_metadata[indices[0][0]]
+        return {
+            "answer": metadata["summary"],
+            "source_video": metadata["video"]
+        }
+    else:
+        return {
+            "answer": "No relevant video found.",
+            "source_video": None
+        }
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

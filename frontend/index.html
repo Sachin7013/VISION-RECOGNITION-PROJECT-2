@@ -48,6 +48,7 @@
  const uploadForm = document.getElementById("uploadForm");
  const videoStream = document.getElementById("videoStream");
  const status = document.getElementById("status");
+ const chatMessages = document.getElementById("chatMessages");
 
  uploadForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -71,21 +72,63 @@
             status.textContent = "Upload successful!";
             videoStream.src = `http://localhost:8000/stream/${encodeURIComponent(result.file_path)}`;
 
-        } catch (err) {
-            console.error(err);
-            status.textContent = "Upload failed!";
-        }
-    });
+        // 📝 Add result summary to chat
+        chatMessages.innerHTML += `
+            <div class="message bot">
+                <b>Video Summary:</b><br>
+                ${result.natural_language_summary}<br>
+                <b>Details:</b>
+                Total Frames: ${result.summary.total_frames}, 
+                FPS: ${result.summary.fps}, 
+                Duration: ${result.summary.duration_seconds}s,
+                Detected Objects: ${result.summary.object_count}
+            </div>
+        `;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    function sendMsg() {
-      const input = document.getElementById('chatInput');
-      const message = input.value.trim();
-      if (message) {
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.innerHTML += `<div class="message user">${message}</div>`;
-        input.value = '';
-      }
+    } catch (err) {
+        console.error(err);
+        status.textContent = "Upload failed!";
     }
+    document.getElementById("chatInput").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        sendMsg();
+    }
+});
+
+    async function sendMsg() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    // Show user message
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML += `<div class="message user">${message}</div>`;
+    input.value = '';
+
+    try {
+        const response = await fetch("http://localhost:8000/query/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: message })  // ✅ Wrap in JSON with key "question"
+        });
+
+        const result = await response.json();
+        console.log(result);
+
+        // Show bot response
+        chatMessages.innerHTML += `<div class="message bot">${result.answer}</div>`;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    } catch (err) {
+        console.error(err);
+        chatMessages.innerHTML += `<div class="message bot">❌ Error: Could not fetch response.</div>`;
+    }
+}
+
+});
+
   </script>
 </body>
 </html>
