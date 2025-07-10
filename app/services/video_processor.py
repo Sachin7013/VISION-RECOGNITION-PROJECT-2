@@ -1,17 +1,14 @@
 import os
 import cv2
-import shutil
 from app.services import object_detector, object_tracker
 from app.utils.helpers import format_result, build_summary_prompt
 from app.utils.embeddings import embedder, embedding_index, embedding_metadata
 from app.services.summary_generate_by_llm import generate_summary
-import numpy as np
-from fastapi.responses import StreamingResponse
-from app.services import object_detector, object_tracker
 from fastapi import UploadFile
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 async def save_video(file: UploadFile) -> str:
     """
@@ -20,6 +17,7 @@ async def save_video(file: UploadFile) -> str:
     path = os.path.join(UPLOAD_DIR, file.filename)
     with open(path, "wb") as f:
         f.write(await file.read())
+    print(f"✅ Video saved at: {path}")
     return path
 
 
@@ -40,6 +38,8 @@ async def process_video(file):
     with open(path, "wb") as f:
         f.write(await file.read())
 
+    print(f"✅ Video saved at: {path}")    
+
     cap = cv2.VideoCapture(path)
     fps = cap.get(cv2.CAP_PROP_FPS)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -53,7 +53,7 @@ async def process_video(file):
     result = format_result(tracks, total_frames, fps, duration)
 
     cap.release()
-    shutil.rmtree(UPLOAD_DIR)
+    # shutil.rmtree(UPLOAD_DIR)
 
     summary_prompt = build_summary_prompt(tracks)
 
@@ -76,10 +76,13 @@ async def process_video(file):
             "duration": result["summary"]["duration_seconds"]
         })
 
+    print("🎉 Video processing complete")    
+
     return {
         "summary": result["summary"],
         "natural_language_summary": summary,
-        "tracks": result["tracks"]
+        "tracks": result["tracks"],
+        "file_path": file.filename
     }
 
 
@@ -128,4 +131,6 @@ def build_tracking_data(cap, detect_fn, track_fn, fps, interval):
                 track_db[tid]["frames"].append(frame_id)
         frame_id += 1
 
+
+    print(f"✅ Processed {frame_id} frames, {len(track_db)} tracks,labels: {set(t['label'] for t in track_db.values())}")
     return list(track_db.values())

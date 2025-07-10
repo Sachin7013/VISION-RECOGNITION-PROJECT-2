@@ -17,9 +17,8 @@ async def upload_video(file: UploadFile = File(...)):
     Uploads the video and starts streaming the processed frames
     """
     # Save video temporarily and stream processed frames
-    saved_path = await video_processor.save_video(file)
-    return {"message": "Video uploaded successfully", "filename": os.path.basename(saved_path)}
-    
+    result = await video_processor.process_video(file)
+    return result
 
 
 # Stream video frames with object detection
