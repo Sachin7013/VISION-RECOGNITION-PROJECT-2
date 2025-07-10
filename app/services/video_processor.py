@@ -5,9 +5,22 @@ from app.services import object_detector, object_tracker
 from app.utils.helpers import format_result, build_summary_prompt
 from app.utils.embeddings import embedder, embedding_index, embedding_metadata
 from app.services.summary_generate_by_llm import generate_summary
+import numpy as np
+from fastapi.responses import StreamingResponse
+from app.services import object_detector, object_tracker
+from fastapi import UploadFile
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+async def save_video(file: UploadFile) -> str:
+    """
+    Save uploaded video to disk and return the saved file path
+    """
+    path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(path, "wb") as f:
+        f.write(await file.read())
+    return path
 
 
 async def process_video(file):

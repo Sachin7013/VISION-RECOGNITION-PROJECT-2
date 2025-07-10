@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vision Recognition</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <!-- Top menu bar -->
+  <div class="menu-bar">
+    <button onclick="viewAction()">View</button>
+    <button onclick="document.getElementById('fileUpload').click()">Upload</button>
+    <button onclick="toggleVideoDropdown()">Show Videos</button>
+  </div>
+
+  <!-- Hidden file input for upload -->
+  <form id="uploadForm">
+    <input type="file" id="videoFile" accept="video/*" required />
+    <button type="submit">Upload</button>
+</form>
+
+  <!-- Dropdown for videos -->
+  <div id="videoDropdown" style="display:none; background:#f1f1f1; padding:10px;">
+    <!-- Video list will appear here -->
+  </div>
+
+  <!-- Main content -->
+  <div class="container">
+    <div class="video">
+        <p id="status"></p>
+        <img id="videoStream" width="640" height="480" />
+    </div>
+    <div class="chat">
+      <div id="chatMessages">
+        <div class="message bot">Hello! I’m your vision assistant.</div>
+      </div>
+      <div class="input-area">
+        <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="if(event.key==='Enter') sendMsg()">
+        <button onclick="sendMsg()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+ // Handle file upload and start live stream
+ const uploadForm = document.getElementById("uploadForm");
+ const videoStream = document.getElementById("videoStream");
+ const status = document.getElementById("status");
+
+ uploadForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById("videoFile");
+            const file = fileInput.files[0];
+            if (!file) return alert("Please select a video file!");
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+            status.textContent = "Uploading...";
+            const response = await fetch("http://localhost:8000/upload/", {
+                method: "POST",
+                body: formData,
+            });
+            const result = await response.json();
+            console.log(result);
+
+            status.textContent = "Upload successful!";
+            videoStream.src = `http://localhost:8000/stream/${result.filename}`;
+        } catch (err) {
+            console.error(err);
+            status.textContent = "Upload failed!";
+        }
+    });
+
+    function sendMsg() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (message) {
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML += `<div class="message user">${message}</div>`;
+        input.value = '';
+      }
+    }
+  </script>
+</body>
+</html>
