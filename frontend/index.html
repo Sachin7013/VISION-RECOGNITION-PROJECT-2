@@ -95,9 +95,12 @@
         event.preventDefault();
         sendMsg();
     }
+    else {
+        sendQuery();
+    }
 });
 
-    async function sendMsg() {
+async function sendMsg() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
     if (!message) return;
@@ -111,7 +114,7 @@
         const response = await fetch("http://localhost:8000/query/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question: message })  // ✅ Wrap in JSON with key "question"
+            body: JSON.stringify({ question: message })  // ✅ wrap question
         });
 
         const result = await response.json();
@@ -126,6 +129,7 @@
         chatMessages.innerHTML += `<div class="message bot">❌ Error: Could not fetch response.</div>`;
     }
 }
+
 
 });
 

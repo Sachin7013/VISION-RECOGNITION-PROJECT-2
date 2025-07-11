@@ -7,7 +7,7 @@ async def semantic_search(prompt: str):
     query_embedding = embedder.encode(prompt)
     scores, indices = embedding_index.search(query_embedding[None, :], k=1)
 
-    if scores[0][0] > 0.5:  # similarity threshold
+    if scores and scores[0][0] > 0.4:  # lowered threshold for more matches
         metadata = embedding_metadata[indices[0][0]]
         return {
             "answer": metadata["summary"],
