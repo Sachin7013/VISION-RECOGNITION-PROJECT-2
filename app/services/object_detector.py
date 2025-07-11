@@ -7,7 +7,23 @@ from app.services.crack_detector import predict_crack
 
 
 # Load YOLOv8 model
-yolo_model = YOLO("yolov8x.pt")
+# yolo_model = YOLO("yolov8x.pt")
+
+# Load the trained model
+model = YOLO('C:/AlgoOrange Task/vision-recognition-project/runs/detect/train6/weights/best.pt')
+
+# # Run inference on an image
+# results = model.predict('C:/AlgoOrange Task/vision-recognition-project/tracked_img')
+
+# # Display the results
+# results[0].show()
+
+# Extract and print bounding box coordinates
+for result in results:
+    boxes = result.boxes  # Boxes object for bounding box outputs
+    for box in boxes:
+        print(f"Class: {box.cls}, Confidence: {box.conf}, Coordinates: {box.xyxy}")
+
 
 def detect_objects(frame):
     """
@@ -16,10 +32,10 @@ def detect_objects(frame):
     detections = []
 
     # ---------- YOLOv8 Detection ----------
-    yolo_results = yolo_model(frame)[0]
+    yolo_results = model(frame)[0]
     for box in yolo_results.boxes:
         cls_id = int(box.cls)
-        label = yolo_model.names[cls_id]
+        label = model.names[cls_id]
         conf = float(box.conf)
         if conf >= 70:
             x1, y1, x2, y2 = map(int, box.xyxy[0])

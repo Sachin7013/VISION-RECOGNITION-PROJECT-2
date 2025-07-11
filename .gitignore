@@ -17,3 +17,11 @@ track_data/
 
 README.md
 .env
+
+tracked_images
+
+*.jpg
+*.png
+*.pt
+*.yaml
+*.csv
