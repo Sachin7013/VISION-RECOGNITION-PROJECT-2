@@ -1,4 +1,3 @@
-# app/services/live_stream.py
 from fastapi import WebSocket, WebSocketDisconnect
 import cv2
 import asyncio
@@ -41,3 +40,14 @@ async def process_video_for_streaming(file_path):
         frame_queue.append(frame_bytes)
         await asyncio.sleep(0.033)  # Simulate real-time processing delay
     cap.release()
+
+
+
+
+#############################################################
+
+                #     FOR TESTING    #
+
+        #  THIS CODE IS FOR THE STREAMING LIVE CAMERA # 
+                          
+#############################################################
