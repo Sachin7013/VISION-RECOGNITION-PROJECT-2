@@ -11,14 +11,14 @@
   <!-- Top menu bar -->
   <div class="menu-bar">
     <button onclick="viewAction()">View</button>
-    <button onclick="document.getElementById('fileUpload').click()">Upload</button>
+    <label for="videoFile" class="upload-btn">Upload</label>
     <button onclick="toggleVideoDropdown()">Show Videos</button>
   </div>
 
   <!-- Hidden file input for upload -->
   <form id="uploadForm">
-    <input type="file" id="videoFile" accept="video/*" required />
-    <button type="submit">Upload</button>
+    <input type="file" id="videoFile" accept="video/*" required hidden />
+    <button type="submit">Submit Upload</button>
 </form>
 
   <!-- Dropdown for videos -->
@@ -29,7 +29,10 @@
   <!-- Main content -->
   <div class="container">
     <div class="video">
-        <p id="status"></p>
+      <p id="status"></p>
+      <div id="loaderContainer" style="display:none;">
+        <div class="loader"></div>
+      </div>
         <img id="videoStream" width="640" height="480" />
     </div>
     <div class="chat">
@@ -60,7 +63,7 @@
             formData.append("file", file);
 
             try {
-            status.textContent = "Uploading...";
+              document.getElementById("loaderContainer").style.display = "block";
             const response = await fetch("http://localhost:8000/upload/", {
                 method: "POST",
                 body: formData,
@@ -69,26 +72,26 @@
             console.log(result);
             
 
-            status.textContent = "Upload successful!";
+            document.getElementById("loaderContainer").style.display = "none";
             videoStream.src = `http://localhost:8000/stream/${encodeURIComponent(result.file_path)}`;
 
         // 📝 Add result summary to chat
         chatMessages.innerHTML += `
             <div class="message bot">
-                <b>Video Summary:</b><br>
-                ${result.natural_language_summary}<br>
-                <b>Details:</b>
-                Total Frames: ${result.summary.total_frames}, 
-                FPS: ${result.summary.fps}, 
-                Duration: ${result.summary.duration_seconds}s,
-                Detected Objects: ${result.summary.object_count}
+                <b>Video Summary:</b><br></n>
+                ${result.natural_language_summary}<br></n>
+                <b>Details:</b></n>
+                Total Frames: ${result.summary.total_frames}</n>, 
+                FPS: ${result.summary.fps}</n>, 
+                Duration: ${result.summary.duration_seconds}</n>,
+                Cracks Detected: ${result.summary.crack_count}</n>
             </div>
         `;
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
     } catch (err) {
         console.error(err);
-        status.textContent = "Upload failed!";
+        document.getElementById("loaderContainer").style.display = "none";
     }
     document.getElementById("chatInput").addEventListener("keydown", function (event) {
     if (event.key === "Enter") {

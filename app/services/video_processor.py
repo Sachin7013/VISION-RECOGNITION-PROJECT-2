@@ -73,7 +73,8 @@ async def process_video(file):
             "video": file.filename,
             "summary": summary,
             "tracks": result["tracks"],
-            "duration": result["summary"]["duration_seconds"]
+            "duration": result["summary"]["duration_seconds"],
+            "crack_count": result["crack_count"]
         })
 
     print("🎉 Video processing complete")    
@@ -82,7 +83,8 @@ async def process_video(file):
         "summary": result["summary"],
         "natural_language_summary": summary,
         "tracks": result["tracks"],
-        "file_path": file.filename
+        "file_path": file.filename,
+        "crack_count": result["crack_count"]
     }
 
 
@@ -102,35 +104,66 @@ def build_tracking_data(cap, detect_fn, track_fn, fps, interval):
     """
     frame_id = 0
     track_db = {}
+    crack_count = 0
 
     while True:
         ret = cap.grab()
         if not ret:
             break
+            
         if frame_id % interval == 0:
             ret, frame = cap.retrieve()
             if not ret:
                 break
-            detections = detect_fn(frame)
-            tracks = track_fn(frame, detections)
+                
+            # Run object detection
+            detections, _ = detect_fn(frame)
+            
+            # Count cracks
+            for det in detections:
+                if det.get("label") == "crack":
+                    crack_count += 1
+            
+            # Track objects (excluding cracks)
+            tracks = track_fn(frame, [d for d in detections if d.get("label") != "crack"])
+            
+            # Update track database
             for t in tracks:
                 if not t.is_confirmed():
                     continue
-                x1, y1, x2, y2 = map(int, t.to_ltrb())
-                center = [(x1 + x2) // 2, (y1 + y2) // 2]
+                    
                 tid = t.track_id
-                track_db.setdefault(tid, {
-                    "track_id": tid,
-                    "label": t.det_class,
-                    "trajectory": [],
-                    "timestamps": [],
-                    "frames": []
-                })
+                bbox = t.to_ltrb()
+                center = ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
+                
+                if tid not in track_db:
+                    track_db[tid] = {
+                        "track_id": tid,
+                        "label": t.det_class,
+                        "trajectory": [],
+                        "timestamps": [],
+                        "frames": []
+                    }
+                
                 track_db[tid]["trajectory"].append(center)
                 track_db[tid]["timestamps"].append(round(frame_id / fps, 2))
                 track_db[tid]["frames"].append(frame_id)
+                
         frame_id += 1
+    
+    # Add crack count to the first track (or create a dummy track if none exists)
+    if crack_count > 0:
+        if not track_db:
+            track_db[0] = {
+                "track_id": 0,
+                "label": "crack",
+                "trajectory": [],
+                "timestamps": [],
+                "frames": []
+            }
+        else:
+            # Add crack count to the first track
+            track_db[0]["crack_count"] = crack_count
 
-
-    print(f"✅ Processed {frame_id} frames, {len(track_db)} tracks,labels: {set(t['label'] for t in track_db.values())}")
+    print(f"✅ Processed {frame_id} frames, {len(track_db)} tracks, {crack_count} cracks detected")
     return list(track_db.values())

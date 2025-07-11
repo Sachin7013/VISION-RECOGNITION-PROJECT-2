@@ -2,7 +2,14 @@ from app.services.object_tracker import calculate_angle
 
 def format_result(tracks, total_frames, fps, duration):
     formatted_tracks = []
+    crack_count = 0
+    
+    # Count cracks and format tracks
     for track in tracks:
+        if track.get("label") == "crack":
+            crack_count += 1
+            continue  # Skip adding cracks to regular tracks
+            
         formatted_track = {
             "track_id": track["track_id"],
             "label": track["label"],
@@ -18,9 +25,11 @@ def format_result(tracks, total_frames, fps, duration):
             "total_frames": total_frames,
             "fps": fps,
             "duration_seconds": round(duration, 2),
-            "object_count": len(tracks)
+            "object_count": len(formatted_tracks),
+            "crack_count": crack_count
         },
-        "tracks": formatted_tracks
+        "tracks": formatted_tracks,
+        "crack_count": crack_count
     }
 
 def describe_actions(trajectory):
@@ -30,35 +39,6 @@ def describe_actions(trajectory):
         actions.append(f"Moved at {angle:.2f} degrees")
     return actions
 
-# def build_summary_prompt(tracks):
-#     object_lines = []
-#     for obj in tracks:
-#         trajectory = obj.get("trajectory", [])
-#         if len(trajectory) > 1:
-#             start = trajectory[0]
-#             end = trajectory[-1]
-#             dx = end[0] - start[0]
-#             dy = end[1] - start[1]
-#             distance = (dx**2 + dy**2) ** 0.5
-#             main_direction = get_main_direction(dx, dy)
-#             line = (
-#                 f"- ID: {obj['track_id']}, Label: {obj['label']}, "
-#                 f"Moved {distance:.1f} units towards {main_direction}."
-#             )
-#         else:
-#             line = f"- ID: {obj['track_id']}, Label: {obj['label']}, Stationary."
-#         object_lines.append(line)
-
-#     return (
-#         "You are a helpful assistant summarizing object movement in a video.\n"
-#         "Each object has:\n"
-#         "- an ID\n"
-#         "- a label (e.g., car, person)\n"
-#         "- its overall movement summary\n"
-#         "Tracking Data:\n"
-#         + "\n".join(object_lines)
-#         + "\nProvide a concise summary of the objects' movements in the video."
-#     )
 
 def build_summary_prompt(tracks, max_objects=100):
     """
